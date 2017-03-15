@@ -1,0 +1,23 @@
+package msg;
+
+message ClientMsg
+{
+    enum Type
+    {
+        REQUEST = 1;
+        DATA = 2;
+    }
+    required Type type = 1;
+
+    message Request
+    {
+        // password to enter in server
+        required string password = 1;
+        required int32 cmd = 2;
+        required string addr = 3;
+        required int32 port = 4;
+    }
+    optional Request request = 2;
+
+    optional bytes data = 3;
+}

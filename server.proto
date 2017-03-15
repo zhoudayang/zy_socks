@@ -1,0 +1,21 @@
+package msg;
+
+message ServerMsg
+{
+    enum Type
+    {
+        RESPONSE = 1;
+        DATA = 2;
+    }
+    required Type type = 1;
+
+    message Response
+    {
+        required int32 rep = 1;
+        optional uint32 addr = 2 [default = 0];
+        optional int32 port = 3 [default = 0];
+    }
+    optional Response response = 2;
+
+    optional bytes data = 3;
+}
