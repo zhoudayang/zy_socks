@@ -90,13 +90,23 @@ void Tunnel::onMessage(const Tunnel::TcpConnectionPtr &con, muduo::net::Buffer *
           }
           else if(response.rep() == 0x03)
           {
-            LOG_ERROR << "resolve error at remote server!";
+            LOG_ERROR << "resolve error at remote server due to resolve " << domain_name_;
             send_response_and_teardown(0x03);
           }
           else if(response.rep() == 0x04)
           {
-            LOG_ERROR << "connect timeout at remote server!";
+            LOG_ERROR << "connect timeout at remote server due to " << domain_name_;
             send_response_and_teardown(0x04);
+          }
+          else if(response.rep() == 0x05)
+          {
+            LOG_ERROR << "password not correct!";
+            send_response_and_teardown(0x05);
+          }
+          else if(response.rep() == 0x07)
+          {
+            LOG_ERROR << "password not correct!";
+            send_response_and_teardown(0x07);
           }
           else
           {
@@ -148,7 +158,7 @@ void Tunnel::onMessage(const Tunnel::TcpConnectionPtr &con, muduo::net::Buffer *
       buf->retrieve(length);
     }
   }
-  else
+  else if (state_ != kTeardown)
   {
     LOG_ERROR << "invalid tunnel state " << state_;
     teardown();

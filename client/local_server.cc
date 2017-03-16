@@ -18,7 +18,8 @@ local_server::local_server(muduo::net::EventLoop *loop,
       pool_(pool),
       password_(passwd),
       con_states_(),
-      tunnels_()
+      tunnels_(),
+      timeout_(6) // set default timeout to 6 
 {
   server_.setConnectionCallback(boost::bind(&local_server::onConnection, this, _1));
   server_.setMessageCallback(boost::bind(&local_server::onMessage, this, _1, _2, _3));
@@ -126,6 +127,7 @@ void local_server::onMessage(const muduo::net::TcpConnectionPtr &con,
       // stop read now
       con->stopRead();
       TunnelPtr tunnel(new Tunnel(loop_, remote_addr_, pool_, domain, port, password_, con));
+      tunnel->set_timeout(timeout_);
       tunnel->set_onTransportCallback(boost::bind(&local_server::set_con_state, this, con_name, kTransport));
       tunnel->setup();
       tunnel->connect();

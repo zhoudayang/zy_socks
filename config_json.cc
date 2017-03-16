@@ -10,7 +10,7 @@ using namespace rapidjson;
 file_reader::file_reader(const std::string &path)
     : fp_(nullptr)
 {
-  if(nullptr == fopen(path.c_str(), "rb"))
+  if((fp_ = fopen(path.c_str(), "rb")) == nullptr)
   {
     LOG_FATAL << "fail to open config file with given path : " << path << " the reason is " << strerror(errno);
   }
@@ -28,10 +28,7 @@ config_json::config_json(const std::string &path, bool server)
   char buffer[1024];
   FileReadStream is(reader.fp(), buffer, sizeof(buffer));
   config_.ParseStream(is);
-  if(!config_.HasMember("server") || !config_["server"].IsString())
-  {
-    LOG_FATAL << "config with out server address";
-  }
+
   if(!config_.HasMember("server_port") || !config_["server_port"].IsNumber())
   {
     LOG_FATAL << "config without server_port";
@@ -44,6 +41,10 @@ config_json::config_json(const std::string &path, bool server)
   {
     LOG_FATAL << "config without timeout";
   }
+  if(!config_.HasMember("server_ipv6") || !config_["server_ipv6"].IsBool())
+  {
+    LOG_FATAL << "config without server_ipv6";
+  }
   if(server)
   {
     if(!config_.HasMember("dns_timeout") || !config_["dns_timeout"].IsNumber())
@@ -53,6 +54,10 @@ config_json::config_json(const std::string &path, bool server)
   }
   else
   {
+    if(!config_.HasMember("server") || !config_["server"].IsString())
+    {
+      LOG_FATAL << "config with out server address";
+    }
     if(!config_.HasMember("local_address") || !config_["local_address"].IsString())
     {
       LOG_FATAL << "config without local_address";
@@ -61,6 +66,7 @@ config_json::config_json(const std::string &path, bool server)
     {
       LOG_FATAL << "config without local_port";
     }
+
   }
 }
 
@@ -91,4 +97,8 @@ int config_json::timeout() const {
 
 int config_json::dns_timeout() const {
   return config_["dns_timeout"].GetInt();
+}
+
+bool config_json::server_ipv6() const {
+  return config_["server_ipv6"].GetBool();
 }

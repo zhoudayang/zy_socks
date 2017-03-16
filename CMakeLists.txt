@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8)
 project(zy_socks)
 
 add_definitions(-std=c++11)
-add_compile_options(-O0 -g -Wall -Werror)
+add_compile_options(-O2 -g -Wall -Werror)
 
 find_package(Protobuf REQUIRED)
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HEADERS client.proto server.proto)
@@ -27,5 +27,3 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(client)
 add_subdirectory(server)
-
-

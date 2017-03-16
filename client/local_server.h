@@ -7,7 +7,6 @@
 #include <muduo/net/TcpServer.h>
 #include <unordered_map>
 #include <muduo/base/ThreadPool.h>
-#include <muduo/net/EventLoop.h>
 
 namespace zy
 {
@@ -32,6 +31,9 @@ public:
   void set_con_state(const muduo::string& con_name, conState state);
   
   void start() { server_.start(); }
+
+  void set_timeout(double timeout) { timeout_ = timeout; }
+
 private:
 
   void erase_from_con_states(const muduo::string& con_name);
@@ -45,5 +47,6 @@ private:
   std::string password_;
   std::unordered_map<muduo::string, conState> con_states_;
   std::unordered_map<muduo::string, TunnelPtr> tunnels_;
+  double timeout_;
 };
 }
