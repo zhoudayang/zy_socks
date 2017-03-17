@@ -39,7 +39,7 @@ class config_json : boost::noncopyable
   int timeout() const;
 
   int dns_timeout() const;
-  
+
   bool server_ipv6() const;
 
  private:

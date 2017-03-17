@@ -66,7 +66,6 @@ config_json::config_json(const std::string &path, bool server)
     {
       LOG_FATAL << "config without local_port";
     }
-
   }
 }
 

@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     exit(-1);
   }
 
-  config_json config(argv[1]);
+  config_json config(argv[1], false);
 
   std::string server_ip = config.server_addr();
   bool server_ipv6 = config.server_ipv6();
