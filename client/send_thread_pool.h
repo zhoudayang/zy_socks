@@ -12,7 +12,7 @@ namespace zy
 class send_thread_pool : boost::noncopyable
 {
  public:
-  explicit send_thread_pool(muduo::net::EventLoop* loop, int thread_num = 2);
+  explicit send_thread_pool(muduo::net::EventLoop* loop, int thread_num = 1);
 
   // thread safe
   void send_in_pool(const boost::weak_ptr<muduo::net::TcpConnection>& wkCon, const msg::ClientMsg& msg);
@@ -22,7 +22,7 @@ class send_thread_pool : boost::noncopyable
   ~send_thread_pool() = default;
 
  private:
-  void send_in_loop(const boost::weak_ptr<muduo::net::TcpConnection>& wkCon, const std::string& data);
+  static void send_in_loop(const boost::weak_ptr<muduo::net::TcpConnection>& wkCon, const std::string& data);
 
   muduo::net::EventLoop* loop_;
   muduo::ThreadPool pool_;

@@ -20,7 +20,7 @@ void send_thread_pool::send_in_pool(const boost::weak_ptr<muduo::net::TcpConnect
     auto data = msg.SerializeAsString();
     snappy::Compress(data.c_str(), data.size(), &compressed_str);
   }
-  loop_->runInLoop(boost::bind(&send_thread_pool::send_in_loop, this, wkCon, compressed_str));
+  loop_->runInLoop(boost::bind(&send_thread_pool::send_in_loop, wkCon, compressed_str));
 }
 
 void send_thread_pool::setQueueSize(int size)
