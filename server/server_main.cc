@@ -24,7 +24,7 @@ void init_log()
 {
   g_logFile.reset(new muduo::LogFile("/tmp/zy_socks", 500 * 1024, false, 3, 100));
   muduo::Logger::setOutput(outputFunc);
-  muduo::Logger::setLogLevel(muduo::Logger::INFO);
+  muduo::Logger::setLogLevel(muduo::Logger::WARN);
   muduo::Logger::setFlush(flushFunc);
 }
 
