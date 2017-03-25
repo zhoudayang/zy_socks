@@ -27,7 +27,11 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
          PoolPtr pool, const std::string& domain_name, uint16_t port,
          const std::string& passwd, const TcpConnectionPtr& con);
 
-  ~Tunnel() = default;
+  ~Tunnel()
+  {
+   if(clientCon_ && clientCon_->connected())
+    clientCon_->shutdown();
+  }
 
   void onConnection(const muduo::net::TcpConnectionPtr& con);
 
