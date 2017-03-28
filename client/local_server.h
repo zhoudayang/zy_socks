@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tunnel.h"
-#include "send_thread_pool.h"
 
 #include <boost/noncopyable.hpp>
 #include <muduo/net/TcpServer.h>
@@ -22,7 +21,7 @@ public:
   };
 
   local_server(muduo::net::EventLoop* loop, const muduo::net::InetAddress& local_addr, const muduo::net::InetAddress& remote_addr,
-               const PoolPtr& pool, const std::string& passwd);
+               const std::string& passwd);
 
   void onConnection(const muduo::net::TcpConnectionPtr& con);
 
@@ -43,7 +42,6 @@ private:
   muduo::net::EventLoop* loop_;
   muduo::net::TcpServer server_;
   muduo::net::InetAddress remote_addr_;
-  PoolPtr pool_;
   std::string password_;
   std::unordered_map<muduo::string, conState> con_states_;
   std::unordered_map<muduo::string, TunnelPtr> tunnels_;

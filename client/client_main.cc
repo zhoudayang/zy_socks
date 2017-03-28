@@ -60,8 +60,7 @@ int main(int argc, char* argv[])
   LOG_INFO << " pid = " << ::getpid();
   muduo::net::EventLoop loop;
 
-  PoolPtr pool = std::make_shared<send_thread_pool>(&loop);
-  local_server server(&loop, local_addr, server_addr, pool, passwd);
+  local_server server(&loop, local_addr, server_addr, passwd);
   server.set_timeout(timeout);
 
   server.start();

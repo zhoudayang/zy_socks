@@ -1,11 +1,11 @@
 #pragma once
 
-#include "send_thread_pool.h"
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/TcpClient.h>
 #include <muduo/net/TimerId.h>
+#include <client.pb.h>
 
 namespace zy
 {
@@ -24,14 +24,10 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
   };
 
   Tunnel(muduo::net::EventLoop* loop, const muduo::net::InetAddress& remote_addr,
-         PoolPtr pool, const std::string& domain_name, uint16_t port,
+         const std::string& domain_name, uint16_t port,
          const std::string& passwd, const TcpConnectionPtr& con);
 
-  ~Tunnel()
-  {
-   if(clientCon_ && clientCon_->connected())
-    clientCon_->shutdown();
-  }
+  ~Tunnel() = default;
 
   void onConnection(const muduo::net::TcpConnectionPtr& con);
 
@@ -47,7 +43,11 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
 
   void set_onTransportCallback(const onTransportCallback& cb) { onTransportCallback_ = cb; }
 
+  // shared static function, can call in local_server module
+  static void send_msg(const Tunnel::TcpConnectionPtr &con, const msg::ClientMsg &msg);
+
  private:
+
   enum ServerClient
   {
     kServer,
@@ -76,7 +76,6 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
   TcpConnectionPtr serverCon_;
   // connection to remote server
   TcpConnectionPtr clientCon_;
-  PoolPtr pool_;
   std::string domain_name_;
   uint16_t port_;
   std::string password_;

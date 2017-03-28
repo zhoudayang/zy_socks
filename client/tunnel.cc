@@ -1,21 +1,20 @@
 #include "tunnel.h"
 #include "packet.h"
 
+#include <snappy.h>
 #include <server.pb.h>
 #include <muduo/net/EventLoop.h>
 #include <boost/bind.hpp>
 #include <muduo/base/Logging.h>
-#include <client.pb.h>
 
 using namespace zy;
 
   Tunnel::Tunnel(muduo::net::EventLoop* loop, const muduo::net::InetAddress& remote_addr,
-                 PoolPtr pool, const std::string& domain_name, uint16_t port,
+                 const std::string& domain_name, uint16_t port,
                  const std::string& passwd, const TcpConnectionPtr& con)
   : loop_(loop),
     client_(loop_, remote_addr, "tunnel client"),
     serverCon_(con),
-    pool_(pool),
     domain_name_(domain_name),
     port_(port),
     password_(passwd),
@@ -42,14 +41,14 @@ void Tunnel::onConnection(const muduo::net::TcpConnectionPtr &con)
     request_ptr->set_cmd(0x01);
     request_ptr->set_addr(domain_name_);
     request_ptr->set_port(port_);
-    pool_->send_in_pool(boost::weak_ptr<muduo::net::TcpConnection>(con), message);
+    send_msg(con, message);
   }
     // password not valid
   else if(!con->connected() && state_ == kConnected)
   {
     send_response_and_teardown(0x01);
   }
-  else
+  else if(!con->connected())
   {
     teardown();
   }
@@ -267,3 +266,18 @@ void Tunnel::onTimeoutWeak(const Tunnel::wkTunnel &tunnel)
   if(tunnel_ptr)
     tunnel_ptr->onTimeout();
 }
+
+void Tunnel::send_msg(const Tunnel::TcpConnectionPtr &con, const msg::ClientMsg &msg)
+{
+  muduo::net::Buffer buf;
+  {
+    std::string compressed_str;
+    auto data = msg.SerializeAsString();
+    snappy::Compress(data.data(), data.size(), &compressed_str);
+    buf.appendInt32(static_cast<int32_t>(compressed_str.size()));
+    buf.append(compressed_str.data(), compressed_str.size());
+  }
+  con->send(&buf);
+}
+
+

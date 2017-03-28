@@ -10,16 +10,14 @@ using namespace zy;
 local_server::local_server(muduo::net::EventLoop *loop,
                            const muduo::net::InetAddress &local_addr,
                            const muduo::net::InetAddress &remote_addr,
-                           const PoolPtr &pool,
                            const std::string &passwd)
     : loop_(loop),
       server_(loop_, local_addr, "local_server"),
       remote_addr_(remote_addr),
-      pool_(pool),
       password_(passwd),
       con_states_(),
       tunnels_(),
-      timeout_(6) // set default timeout to 6 
+      timeout_(6) // set default timeout to 6
 {
   server_.setConnectionCallback(boost::bind(&local_server::onConnection, this, _1));
   server_.setMessageCallback(boost::bind(&local_server::onMessage, this, _1, _2, _3));
@@ -36,8 +34,8 @@ void local_server::onConnection(const muduo::net::TcpConnectionPtr &con)
   }
   else
   {
-    erase_from_tunnels(name);
     erase_from_con_states(name);
+    erase_from_tunnels(name);
   }
 }
 
@@ -126,7 +124,7 @@ void local_server::onMessage(const muduo::net::TcpConnectionPtr &con,
       con_states_[con_name] = kGotcmd;
       // stop read now
       con->stopRead();
-      TunnelPtr tunnel(new Tunnel(loop_, remote_addr_, pool_, domain, port, password_, con));
+      TunnelPtr tunnel(new Tunnel(loop_, remote_addr_, domain, port, password_, con));
       tunnel->set_timeout(timeout_);
       tunnel->set_onTransportCallback(boost::bind(&local_server::set_con_state, this, con_name, kTransport));
       tunnel->setup();
@@ -141,8 +139,8 @@ void local_server::onMessage(const muduo::net::TcpConnectionPtr &con,
     data.set_type(msg::ClientMsg_Type_DATA);
     data.set_data(buf->peek(), buf->readableBytes());
     buf->retrieveAll();
-    // send data in thread pool
-    pool_->send_in_pool(boost::weak_ptr<muduo::net::TcpConnection>(clientCon), data);
+    // send data to remote socks server
+    Tunnel::send_msg(clientCon, data);
   }
   else
   {
