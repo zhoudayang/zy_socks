@@ -5,19 +5,18 @@
 #include <boost/noncopyable.hpp>
 #include <muduo/net/TcpServer.h>
 #include <unordered_map>
-#include <muduo/base/ThreadPool.h>
 
 namespace zy
 {
 class local_server : boost::noncopyable
 {
-public:
+ public:
   enum conState
   {
-    kStart, // 连接刚开始建立
-    kVerifyed, // 已经验证通过, 正在等待命令到来
-    kGotcmd, // 已经接收所有命令，正在与远程主机协调
-    kTransport // 正在执行应用层数据交互
+    kStart,
+    kVerified,
+    kGotcmd,
+    kTransport
   };
 
   local_server(muduo::net::EventLoop* loop, const muduo::net::InetAddress& local_addr, const muduo::net::InetAddress& remote_addr,
@@ -28,23 +27,33 @@ public:
   void onMessage(const muduo::net::TcpConnectionPtr& con, muduo::net::Buffer* buf, muduo::Timestamp receiveTime);
 
   void set_con_state(const muduo::string& con_name, conState state);
-  
+
   void start() { server_.start(); }
 
-  void set_timeout(double timeout) { timeout_ = timeout; }
+  void  set_timeout(double timeout) { timeout_ = timeout; }
 
-private:
+ private:
 
-  void erase_from_con_states(const muduo::string& con_name);
+  void erase_from_tunnel(const muduo::string& con_name);
 
-  void erase_from_tunnels(const muduo::string& con_name);
+  struct TunnelState
+  {
+    TunnelState() = default;
+
+    TunnelState(conState state_)
+        : state(state_),
+          tunnel()
+    { }
+
+    conState state;
+    TunnelPtr tunnel;
+  };
 
   muduo::net::EventLoop* loop_;
   muduo::net::TcpServer server_;
   muduo::net::InetAddress remote_addr_;
-  std::string password_;
-  std::unordered_map<muduo::string, conState> con_states_;
-  std::unordered_map<muduo::string, TunnelPtr> tunnels_;
+  std::string passwd_;
+  std::unordered_map<muduo::string, TunnelState> tunnels_;
   double timeout_;
 };
 }

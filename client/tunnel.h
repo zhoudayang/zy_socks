@@ -1,19 +1,21 @@
 #pragma once
 
 #include <boost/noncopyable.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <muduo/net/EventLoop.h>
+#include <memory>
+#include <muduo/net/TcpClient.h>
 #include <muduo/net/TcpClient.h>
 #include <muduo/net/TimerId.h>
 #include <client.pb.h>
 
 namespace zy
 {
-class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
+class Tunnel : boost::noncopyable, public std::enable_shared_from_this<Tunnel>
 {
  public:
   typedef muduo::net::TcpConnectionPtr TcpConnectionPtr;
+  typedef std::weak_ptr<Tunnel> wkTunnel;
   typedef boost::function<void()> onTransportCallback;
+
   enum State
   {
     kInit,
@@ -23,15 +25,15 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
     kTeardown
   };
 
-  Tunnel(muduo::net::EventLoop* loop, const muduo::net::InetAddress& remote_addr,
+  Tunnel(muduo::net::EventLoop* loop, const muduo::net::InetAddress remote_addr,
          const std::string& domain_name, uint16_t port,
          const std::string& passwd, const TcpConnectionPtr& con);
 
   ~Tunnel() = default;
 
-  void onConnection(const muduo::net::TcpConnectionPtr& con);
+  void onConnection(const TcpConnectionPtr& con);
 
-  void onMessage(const TcpConnectionPtr& con, muduo::net::Buffer*& buf, muduo::Timestamp receiveTime);
+  void onMessage(const TcpConnectionPtr& con, muduo::net::Buffer* buf, muduo::Timestamp receiveTime);
 
   void connect() { client_.connect(); }
 
@@ -43,18 +45,12 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
 
   void set_onTransportCallback(const onTransportCallback& cb) { onTransportCallback_ = cb; }
 
-  // shared static function, can call in local_server module
-  static void send_msg(const Tunnel::TcpConnectionPtr &con, const msg::ClientMsg &msg);
-
  private:
-
   enum ServerClient
   {
     kServer,
     kClient
   };
-
-  typedef boost::weak_ptr<Tunnel> wkTunnel;
 
   void onWriteComplete(ServerClient which, const TcpConnectionPtr& con);
 
@@ -72,17 +68,15 @@ class Tunnel : boost::noncopyable, public boost::enable_shared_from_this<Tunnel>
 
   muduo::net::EventLoop* loop_;
   muduo::net::TcpClient client_;
-  // connection to proxy client
   TcpConnectionPtr serverCon_;
-  // connection to remote server
   TcpConnectionPtr clientCon_;
   std::string domain_name_;
   uint16_t port_;
-  std::string password_;
+  std::string passwd_;
   std::unique_ptr<muduo::net::TimerId> timerId_;
   State state_;
-  double timeout_; // timeout, default value is 6 seconds
+  double timeout_;
   onTransportCallback onTransportCallback_;
 };
-typedef boost::shared_ptr<Tunnel> TunnelPtr;
+typedef std::shared_ptr<Tunnel> TunnelPtr;
 }
